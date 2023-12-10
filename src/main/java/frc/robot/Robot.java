@@ -4,7 +4,7 @@
 /* must be accompanied by the FIRST BSD license file in the root directory of */
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
-
+// importing libraries needed (or not lol)
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Encoder;
@@ -12,20 +12,9 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.*;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.motorcontrol.*;
-import com.revrobotics.REVLibError;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 
 
 /**
@@ -42,23 +31,23 @@ public class Robot extends TimedRobot {
    */
 
   //private Spark armmotor = new Spark(1);
-
+// setting variable "armmotor" to correspond with the arm motor
   CANSparkMax armmotor = new CANSparkMax(6, MotorType.kBrushless); 
 
-
-  //private Joystick joy1 = new Joystick(0);
+  // intializing the xbox controller
   private final XboxController joy1 = new XboxController(0);
   Joystick xboxcontoller = new Joystick(0);
+  //initializing the encoder and calculatingencoder constant
   private Encoder encoder = new Encoder(0, 1, false, EncodingType.k4X);
   private final double kDriveTick2Feet = 1.0 / 128 * 6 * Math.PI / 12; 
 
   @Override
   public void robotInit() {
     //m_robotContainer = new RobotContainer();
+
+    // setting the settings for the arm motor
     armmotor.restoreFactoryDefaults();
-
     armmotor.setInverted(false);
-
     armmotor.setSmartCurrentLimit(60);
 
   }
@@ -67,15 +56,31 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     encoder.reset();
   }
-
-  final double kP = 0.5;
+ // creating porportional variable and setpoint variable
+  final double kP = 0.05;
 
   double setpoint = 0;
 
   @Override
   public void autonomousPeriodic() {
-    // get joystick command
-   
+    // get xbox command
+    if (joy1.getRawButton(1)) {
+      // the speed is a percentage
+      setpoint = 10; 
+    } else if (joy1.getRawButton(2)) {
+      setpoint = 0;
+    }
+    
+
+    // get sensor position
+    double sensorPosition = encoder.get() * kDriveTick2Feet;
+
+    // calculations
+    double error = setpoint - sensorPosition;
+
+    double outputSpeed = kP * error;
+    // output to motors
+    armmotor.set(outputSpeed);
   }
   @Override
   public void robotPeriodic() {
@@ -89,34 +94,6 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    if (joy1.getRawButton(1)) {
-
-      setpoint = 10; 
-      armmotor.set(20);
-
-    } else if (joy1.getRawButton(2)) {
-
-      setpoint = 0;
-      armmotor.set(-10)
-      
-    } else if (setpoint == 10) {
-      armmotor.set(0);
-
-    } 
-
-
-
-    // get sensor position
-    double sensorPosition = encoder.get() * kDriveTick2Feet;
-
-    // calculations
-    double error = setpoint - sensorPosition;
-
-    double outputSpeed = kP * error;
-
-    // output to motors
-    armmotor.set(outputSpeed);
-  
   }
 
 
